@@ -1,9 +1,8 @@
-class Fluent::PgHIncrementOutput < Fluent::BufferedOutput
-  Fluent::Plugin.register_output('pghincrement', self)
+class Fluent::PgHStoreOutput < Fluent::BufferedOutput
+  Fluent::Plugin.register_output('pghstore', self)
 
   config_param :database, :string
   config_param :table, :string, :default => 'fluentd_store'
-  config_param :attribute, :string, :default => nil
   config_param :host, :string, :default => 'localhost'
   config_param :port, :integer, :default => 5432
   config_param :user, :string, :default => nil
@@ -53,11 +52,17 @@ class Fluent::PgHIncrementOutput < Fluent::BufferedOutput
   private
 
   def generate_sql(tag, time, record)
-    v = record[@attribute]
+    kv_list = []
+    record.each {|(key,value)|
+      kv_list.push("\"#{key}\" => \"#{value}\"")
+    }
+
+    tag_list = tag.split(".")
+    tag_list.map! {|t| "'" + t + "'"}
 
     sql =<<"SQL"
-INSERT INTO #{@table} (time, #{@attribute}, count) VALUES
-('#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, #{v}, 1);
+INSERT INTO #{@table} (tag, time, record) VALUES
+(ARRAY[#{tag_list.join(",")}], '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, E'#{kv_list.join(",")}');
 SQL
 
     return sql
