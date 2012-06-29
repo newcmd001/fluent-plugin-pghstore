@@ -56,9 +56,6 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   def generate_sql(tag, time, record)
     target = record[@key]
 
-
-    @log.warn "table: #{@table}, target: #{target}, record: #{Time.at(time)}"
-
     sql =<<"SQL"
 SELECT increment ('#{@table}', '#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE);
 SQL
