@@ -59,7 +59,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     sql =<<"SQL"
 INSERT INTO #{@table}(time,key,count) VALUES('#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, '#{target}', 0) 
 EXCEPT SELECT * FROM #{@table} WHERE time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE AND key = '#{target}';
-UPDATE #{@table} SET count = count + 1 WHERE key = #{target} AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
+UPDATE #{@table} SET count = count + 1 WHERE key = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
 SQL
 
     return sql
