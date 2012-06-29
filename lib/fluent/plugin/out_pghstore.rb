@@ -106,18 +106,18 @@ CREATE TABLE #{tablename} (
   count INT
 );
 CREATE LANGUAGE plpgsql;
-CREATE FUNCTION increment(tablename TEXT, target_value TEXT, time_value TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
+CREATE OR REPLACE FUNCTION increment(l_tablename TEXT, l_value TEXT, l_time TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
 $$
 BEGIN
     -- first try to update the key
-    UPDATE tablename SET count = count + 1 WHERE value = target_value AND time = time_value;
+    UPDATE l_tablename SET count = count + 1 WHERE value = l_value AND time = l_time;
     IF found THEN
         RETURN;
     END IF;
     -- not there, so try to insert the key
     -- if someone else inserts the same key concurrently,
     -- we could get a unique-key failure
-    INSERT INTO tablename(time,value,count) VALUES (time_value,target_value,1);
+    INSERT INTO l_tablename(time,value,count) VALUES (l_value,l_time,1);
     RETURN;
 END;
 $$
