@@ -57,7 +57,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     target = record[@key]
 
     sql =<<"SQL"
-SELECT increment ('#{@table}', '#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE);
+INSERT INTO #{@table}(time,key,count) VALUES('#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, '#{target}', 0) 
+EXCEPT SELECT * FROM #{@table} WHERE time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE AND key = '#{target}';
+UPDATE #{@table} SET count = count + 1 WHERE key = #{target} AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
 SQL
 
     return sql
@@ -105,23 +107,6 @@ CREATE TABLE #{tablename} (
   time TIMESTAMP WITH TIME ZONE,
   count INT
 );
-CREATE LANGUAGE plpgsql;
-CREATE OR REPLACE FUNCTION increment(l_tablename TEXT, l_value TEXT, l_time TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
-$$
-BEGIN
-    -- first try to update the key
-    UPDATE l_tablename SET count = count + 1 WHERE value = l_value AND time = l_time;
-    IF found THEN
-        RETURN;
-    END IF;
-    -- not there, so try to insert the key
-    -- if someone else inserts the same key concurrently,
-    -- we could get a unique-key failure
-    INSERT INTO l_tablename(time,value,count) VALUES (l_value,l_time,1);
-    RETURN;
-END;
-$$
-LANGUAGE plpgsql;
 SQL
 
     sql += @table_option if @table_option
