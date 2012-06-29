@@ -1,8 +1,8 @@
-= fluent-plugin-pghstore
+= fluent-plugin-pghincrement
 
 == Component
 
-=== PgHStoreOutput
+=== PgHIncrementOutput
 
 Output to PostgreSQL hstore database. 
 
