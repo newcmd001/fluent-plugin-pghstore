@@ -105,6 +105,7 @@ CREATE TABLE #{tablename} (
   time TIMESTAMP WITH TIME ZONE,
   count INT
 );
+CREATE LANGUAGE plpgsql;
 CREATE FUNCTION increment(tablename TEXT, target_value TEXT, time_value TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
 $$
 BEGIN
@@ -120,6 +121,7 @@ BEGIN
     RETURN;
 END;
 $$
+LANGUAGE plpgsql;
 SQL
 
     sql += @table_option if @table_option
