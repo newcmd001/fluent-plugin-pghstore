@@ -57,8 +57,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     target = record[@key]
 
     sql =<<"SQL"
-INSERT INTO #{@table} (value, time, count) VALUES('#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, 0)  
-EXCEPT SELECT * FROM #{@table} WHERE value = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
+INSERT INTO #{@table} (value, time, count) VALUES('#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, 0) EXCEPT SELECT * FROM #{@table} WHERE value = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
 UPDATE #{@table} SET count = count + 1 WHERE value = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
 SQL
 
