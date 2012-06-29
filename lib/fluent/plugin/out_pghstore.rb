@@ -57,7 +57,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     target = record[@key]
 
     sql =<<"SQL"
-increment ('#{@table}', '#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE);
+SELECT increment ('#{@table}', '#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE);
 SQL
 
     return sql
