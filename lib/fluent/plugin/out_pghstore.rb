@@ -120,7 +120,6 @@ BEGIN
     RETURN;
 END;
 $$
-LANGUAGE plpgsql;
 SQL
 
     sql += @table_option if @table_option
