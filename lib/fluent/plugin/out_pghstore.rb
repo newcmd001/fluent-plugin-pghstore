@@ -10,6 +10,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
 
   config_param :table_option, :string, :default => nil
 
+  config_param :key, :string
+
   def initialize
     super
     require 'pg'
@@ -52,17 +54,10 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   private
 
   def generate_sql(tag, time, record)
-    kv_list = []
-    record.each {|(key,value)|
-      kv_list.push("\"#{key}\" => \"#{value}\"")
-    }
-
-    tag_list = tag.split(".")
-    tag_list.map! {|t| "'" + t + "'"}
+    target = record[@key]
 
     sql =<<"SQL"
-INSERT INTO #{@table} (tag, time, record) VALUES
-(ARRAY[#{tag_list.join(",")}], '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, E'#{kv_list.join(",")}');
+increment ('#{@table}', '#{target}', '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE);
 SQL
 
     return sql
@@ -106,10 +101,26 @@ SQL
   def create_table(tablename)
     sql =<<"SQL"
 CREATE TABLE #{tablename} (
-  tag TEXT[],
+  value TEXT,
   time TIMESTAMP WITH TIME ZONE,
-  record HSTORE
+  count INT
 );
+CREATE FUNCTION increment(tablename TEXT, target_value TEXT, time_value TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
+$$
+BEGIN
+    -- first try to update the key
+    UPDATE tablename SET count = count + 1 WHERE value = target_value AND time = time_value;
+    IF found THEN
+        RETURN;
+    END IF;
+    -- not there, so try to insert the key
+    -- if someone else inserts the same key concurrently,
+    -- we could get a unique-key failure
+    INSERT INTO tablename(time,value,count) VALUES (time_value,target_value,1);
+    RETURN;
+END;
+$$
+LANGUAGE plpgsql;
 SQL
 
     sql += @table_option if @table_option
