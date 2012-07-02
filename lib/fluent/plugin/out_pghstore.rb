@@ -104,11 +104,6 @@ SQL
 CREATE TABLE #{tablename} (
   value TEXT,
   time TIMESTAMP WITH TIME ZONE,
-  count INT
-);
-CREATE TABLE #{tablename} (
-  value TEXT,
-  time TIMESTAMP WITH TIME ZONE,
   count INT DEFAULT 0, 
   PRIMARY KEY(value, time)
 );
