@@ -57,7 +57,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     kv_list = []
     record.each {|(key,value)|
       k_list.push("#{key}")
-      v_list.push("#{value}")
+      v_list.push("'#{value}'")
       kv_list.push("\"#{key}\" => \"#{value}\"")
     }
 
