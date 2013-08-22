@@ -18,7 +18,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   def start
     super
 
-    create_table(@table) unless table_exists?(@table)
+    #create_table(@table) unless table_exists?(@table)
   end
 
   def shutdown
@@ -52,8 +52,12 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   private
 
   def generate_sql(tag, time, record)
+    k_list = []
+    v_list = []
     kv_list = []
     record.each {|(key,value)|
+      k_list.push("#{key}")
+      v_list.push("#{value}")
       kv_list.push("\"#{key}\" => \"#{value}\"")
     }
 
@@ -61,8 +65,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     tag_list.map! {|t| "'" + t + "'"}
 
     sql =<<"SQL"
-INSERT INTO #{@table} (tag, time, record) VALUES
-(ARRAY[#{tag_list.join(",")}], '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, E'#{kv_list.join(",")}');
+INSERT INTO #{@table} (#{k_list.join(",")}) VALUES
+(#{v_list.join(",")});
 SQL
 
     return sql
