@@ -10,8 +10,6 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
 
   config_param :table_option, :string, :default => nil
 
-  config_param :key, :string
-
   def initialize
     super
     require 'pg'
@@ -54,11 +52,17 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   private
 
   def generate_sql(tag, time, record)
-    target = record[@key]
+    kv_list = []
+    record.each {|(key,value)|
+      kv_list.push("\"#{key}\" => \"#{value}\"")
+    }
+
+    tag_list = tag.split(".")
+    tag_list.map! {|t| "'" + t + "'"}
 
     sql =<<"SQL"
-INSERT INTO #{@table} (value, time) VALUES ('#{target}',  '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE) EXCEPT SELECT value, time FROM #{@table} WHERE value = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
-UPDATE #{@table} SET count = count + 1 WHERE value = '#{target}' AND time = '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE;
+INSERT INTO #{@table} (tag, time, record) VALUES
+(ARRAY[#{tag_list.join(",")}], '#{Time.at(time)}'::TIMESTAMP WITH TIME ZONE, E'#{kv_list.join(",")}');
 SQL
 
     return sql
@@ -102,10 +106,9 @@ SQL
   def create_table(tablename)
     sql =<<"SQL"
 CREATE TABLE #{tablename} (
-  value TEXT,
+  tag TEXT[],
   time TIMESTAMP WITH TIME ZONE,
-  count INT DEFAULT 0, 
-  PRIMARY KEY(value, time)
+  record HSTORE
 );
 SQL
 
