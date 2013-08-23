@@ -41,8 +41,6 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   end
 
   def write(chunk)
-    conn_write = get_connection()
-    return if conn_write == nil  # TODO: chunk will be dropped. should retry?
 
     #insert the chunk
     chunk.msgpack_each {|(tag, time_str, record)|
@@ -62,16 +60,19 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       create_table(table_name) unless table_exists?(table_name)
       
       record['id'] = uuid(tag_array[1], time1)
+      
+      conn = get_connection()
+      return if conn == nil  # TODO: chunk will be dropped. should retry?
 
       sql = generate_sql(table_name, time_str, record)
       begin
-        conn_write.exec(sql)
+        conn.exec(sql)
       rescue PGError => e 
         $log.error "PGError: " + e.message  # dropped if error
       end
     }
 
-    conn_write.close()
+    conn.close()
   end
   
   def uuid(game_id, timestamp)
@@ -107,9 +108,11 @@ SQL
 
   def get_connection()
     if @conn != nil and @conn.finished?() == false
+        $log.warn "Connection is alive"
         return @conn  # connection is alived
     end
 
+    $log.warn "Connection is NOT alive. Connecting"
     begin
       if @user
         @conn = PG.connect(:dbname => @database, :host => @host, :port => @port,
