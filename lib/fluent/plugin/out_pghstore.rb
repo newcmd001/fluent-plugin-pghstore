@@ -71,7 +71,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   def uuid(game_id, timestamp)
     a = game_id
     a << "-"
-    a << timestamp.strftime(%y-%m-%d)
+    a << timestamp.strftime("%y-%m-%d")
     a << "-"
     a << SecureRandom.hex(12)
     $log.warn "Player action ID: #{a}"
