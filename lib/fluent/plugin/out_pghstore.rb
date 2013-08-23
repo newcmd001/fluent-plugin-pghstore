@@ -21,7 +21,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   def start
     super
 
-    if remove_tag_prefix = conf['remove_tag_prefix']
+    if remove_tag_prefix = @remove_tag_prefix
       @remove_tag_prefix = Regexp.new('^' + Regexp.escape(remove_tag_prefix))
     end
 
