@@ -9,6 +9,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   config_param :password, :string, :default => nil
 
   config_param :table_option, :string, :default => nil
+  
+  config_param :time_slice_format, :string, :default => '.y%Y.m%m'
 
   def initialize
     super
@@ -37,8 +39,25 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     conn = get_connection()
     return if conn == nil  # TODO: chunk will be dropped. should retry?
 
+    #insert the chunk
     chunk.msgpack_each {|(tag, time_str, record)|
-      sql = generate_sql(tag, time_str, record)
+
+      tag_array = tag.split(".", 4)
+      table_name = tag_array[0]
+      table_name << "."
+      table_name << tag_array[1]
+      time1 = Time.new
+      time_str = time1.strftime(@time_slice_format)
+      table_name << time_str
+      table_name << "."
+      table_name << tag_array[2]
+      $log.warn "Table name: #{table_name}"
+      
+      create_table(table_name) unless table_exists?(table_name)
+      
+      record['id'] = uuid(tag_array[0], time1)
+
+      sql = generate_sql(table_name, time_str, record)
       begin
         conn.exec(sql)
       rescue PGError => e 
@@ -48,10 +67,21 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
 
     conn.close()
   end
+  
+  def uuid(game_id, timestamp)
+    a = game_id
+    a << "-"
+    a << timestamp.strftime(%y-%m-%d)
+    a << "-"
+    a << SecureRandom.hex(12)
+    $log.warn "Player action ID: #{a}"
+    
+    return a
+  end
 
   private
 
-  def generate_sql(tag, time, record)
+  def generate_sql(table_name, time, record)
     k_list = []
     v_list = []
     kv_list = []
@@ -65,7 +95,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     tag_list.map! {|t| "'" + t + "'"}
 
     sql =<<"SQL"
-INSERT INTO #{@table} (#{k_list.join(",")}) VALUES
+INSERT INTO #{table_name} (#{k_list.join(",")}) VALUES
 (#{v_list.join(",")});
 SQL
 
@@ -109,11 +139,23 @@ SQL
 
   def create_table(tablename)
     sql =<<"SQL"
-CREATE TABLE #{tablename} (
-  tag TEXT[],
-  time TIMESTAMP WITH TIME ZONE,
-  record HSTORE
-);
+CREATE TABLE #{tablename} (ID VARCHAR(64) NOT NULL ,
+	 FB_PLAYER_ID VARCHAR(64),
+	 GAME_ID BIGINT,
+	 SESSION_ID VARCHAR(64),
+	 CREATED_DATETIME TIMESTAMP,
+	 LOG_ACTION TINYINT,
+	 TYPE VARCHAR(255),
+	 DESCRIPTION VARCHAR(255),
+	 SUCCESSFUL TINYINT,
+	 LEVEL INTEGER,
+	 CREDIT INTEGER,
+	 EXPERIENCE INTEGER,
+	 ATTRIBUTES VARCHAR(1024),
+	 VIRTUAL_CURRENCY VARCHAR(1024),
+	 LOG_DATETIME TIMESTAMP,
+	 LENGTH BIGINT,
+	 PRIMARY KEY (ID));
 SQL
 
     sql += @table_option if @table_option
