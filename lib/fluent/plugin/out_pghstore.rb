@@ -41,6 +41,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   end
 
   def write(chunk)
+    conn = get_connection()
+    return if conn == nil  # TODO: chunk will be dropped. should retry?
 
     #insert the chunk
     chunk.msgpack_each {|(tag, time_str, record)|
