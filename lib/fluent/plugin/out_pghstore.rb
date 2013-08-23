@@ -93,6 +93,11 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     v_list = []
     kv_list = []
     record.each {|(key,value)|
+      if(key == "playerId") key = "fb_player_id"
+      if(key == "virtualCurrency") key = "virtual_currency"
+      if(key == "sessionId") key = "session_id"
+      if(key == "logAction" && value.is_a? Integer) key = "log_action"
+    
       k_list.push("#{key}")
       v_list.push("'#{value}'")
       kv_list.push("\"#{key}\" => \"#{value}\"")
