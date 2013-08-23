@@ -95,6 +95,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     v_list = []
     kv_list = []
     record.each {|(key,value)|
+      if key == "gameId"
+        key = "game_id"
+      end
       if key == "playerId"
         key = "fb_player_id"
       end
