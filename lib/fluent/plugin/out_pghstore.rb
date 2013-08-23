@@ -41,8 +41,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   end
 
   def write(chunk)
-    conn = get_connection()
-    return if conn == nil  # TODO: chunk will be dropped. should retry?
+    conn_write = get_connection()
+    return if conn_write == nil  # TODO: chunk will be dropped. should retry?
 
     #insert the chunk
     chunk.msgpack_each {|(tag, time_str, record)|
@@ -61,23 +61,23 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       
       create_table(table_name) unless table_exists?(table_name)
       
-      record['id'] = uuid(tag_array[0], time1)
+      record['id'] = uuid(tag_array[1], time1)
 
       sql = generate_sql(table_name, time_str, record)
       begin
-        conn.exec(sql)
+        conn_write.exec(sql)
       rescue PGError => e 
         $log.error "PGError: " + e.message  # dropped if error
       end
     }
 
-    conn.close()
+    conn_write.close()
   end
   
   def uuid(game_id, timestamp)
     a = game_id
     a << "-"
-    a << timestamp.strftime("%y-%m-%d")
+    a << timestamp.strftime("%Y-%m-%d")
     a << "-"
     a << SecureRandom.hex(12)
     $log.warn "Player action ID: #{a}"
