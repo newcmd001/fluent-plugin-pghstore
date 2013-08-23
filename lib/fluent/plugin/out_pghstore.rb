@@ -110,11 +110,33 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "logAction" and value.is_a? Integer
         key = "log_action"
       end
+      if key == "logDatetime"
+        key = "log_action"
+        if value.is_a? Integer
+          #Timestamp is in UNIX timestamp format
+          time2 = Date.jd(value)
+          value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
+          $log.warn "Integer timestamp - #{value}"
+        else
+          begin
+            time2 = Date.strptime("%a, %d %b %Y %H:%M:%S %z")
+            value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
+            $log.warn "Stirng timestamp - #{value}"
+          rescue
+            next
+          end
+        end
+      end
     
       k_list.push("#{key}")
       v_list.push("'#{value}'")
       kv_list.push("\"#{key}\" => \"#{value}\"")
     }
+    
+    k_list.push("timestamp")
+    time1 = Time.new
+    time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
+    v_list.push(time_str)
 
     sql =<<"SQL"
 INSERT INTO \"#{table_name}\" (#{k_list.join(",")}) VALUES
@@ -167,7 +189,7 @@ CREATE TABLE "#{tablename}" (ID VARCHAR(64) NOT NULL ,
 	 FB_PLAYER_ID VARCHAR(64),
 	 GAME_ID BIGINT,
 	 SESSION_ID VARCHAR(64),
-	 CREATED_DATETIME TIMESTAMP,
+	 TIMESTAMP TIMESTAMP,
 	 LOG_ACTION SMALLINT,
 	 TYPE VARCHAR(255),
 	 DESCRIPTION VARCHAR(255),
