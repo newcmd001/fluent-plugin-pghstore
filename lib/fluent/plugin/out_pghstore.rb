@@ -127,7 +127,7 @@ SQL
 
   def table_exists?(table)
     sql =<<"SQL"
-SELECT COUNT(*) FROM pg_tables WHERE tablename = '#{table}';
+SELECT COUNT(*) FROM pg_tables WHERE LOWER(tablename) = LOWER('#{table}');
 SQL
     conn = get_connection()
     raise "Could not connect the database at startup. abort." if conn == nil
