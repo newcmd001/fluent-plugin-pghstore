@@ -111,7 +111,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
         key = "log_action"
       end
       if key == "logDatetime"
-        key = "log_action"
+        key = "log_datetime"
         if value.is_a? Integer
           #Timestamp is in UNIX timestamp format
           time2 = Date.jd(value)
