@@ -112,16 +112,17 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       end
       if key == "logDatetime"
         key = "log_datetime"
-        if value.is_a? Integer
+        $log.warn "log_datetime = #{value}"
+        begin value_i = Integer(value)
           #Timestamp is in UNIX timestamp format
-          time2 = Date.jd(value)
-          value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
+          time2 = Date.jd(value_i)
+          value_i = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
           $log.warn "Integer timestamp - #{value}"
-        else
+        rescue
           begin
             time2 = Date.strptime("%a, %d %b %Y %H:%M:%S %z")
             value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
-            $log.warn "Stirng timestamp - #{value}"
+            $log.warn "String timestamp - #{value}"
           rescue
             next
           end
