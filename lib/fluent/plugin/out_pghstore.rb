@@ -11,6 +11,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   config_param :table_option, :string, :default => nil
   
   config_param :time_slice_format, :string, :default => '.y%Y.m%m'
+  config_param :remove_tag_prefix, :string, :default => 'action.'
 
   def initialize
     super
@@ -19,6 +20,10 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
 
   def start
     super
+
+    if remove_tag_prefix = conf['remove_tag_prefix']
+      @remove_tag_prefix = Regexp.new('^' + Regexp.escape(remove_tag_prefix))
+    end
 
     #create_table(@table) unless table_exists?(@table)
   end
@@ -51,6 +56,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       table_name << time_str
       table_name << "."
       table_name << tag_array[2]
+      table_name = table_name.gsub(@remove_tag_prefix, '') if @remove_tag_prefix
       $log.warn "Table name: #{table_name}"
       
       create_table(table_name) unless table_exists?(table_name)
@@ -91,11 +97,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       kv_list.push("\"#{key}\" => \"#{value}\"")
     }
 
-    tag_list = tag.split(".")
-    tag_list.map! {|t| "'" + t + "'"}
-
     sql =<<"SQL"
-INSERT INTO #{table_name} (#{k_list.join(",")}) VALUES
+INSERT INTO \"#{table_name}\" (#{k_list.join(",")}) VALUES
 (#{v_list.join(",")});
 SQL
 
@@ -139,7 +142,7 @@ SQL
 
   def create_table(tablename)
     sql =<<"SQL"
-CREATE TABLE #{tablename} (ID VARCHAR(64) NOT NULL ,
+CREATE TABLE "#{tablename}" (ID VARCHAR(64) NOT NULL ,
 	 FB_PLAYER_ID VARCHAR(64),
 	 GAME_ID BIGINT,
 	 SESSION_ID VARCHAR(64),
