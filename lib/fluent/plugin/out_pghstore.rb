@@ -131,7 +131,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
         begin value_i = Integer(value)
           #Timestamp is in UNIX timestamp format
           time2 = Date.jd(value_i)
-          value_i = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
+          value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
           $log.warn "Integer timestamp - #{value}"
         rescue
           begin
