@@ -107,6 +107,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "sessionId"
         key = "session_id"
       end
+      
       if key == "logAction"
         key = "log_action"
       end
@@ -116,6 +117,17 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "log_action"
         next unless value.is_a? Integer
       end
+      
+      if key == "successful"
+        if value == "true"
+          value = 1
+        else if value == "false"
+          value = 0
+        else
+          value = 1 unless value.is_a? Integer
+        end
+      end
+      
       if key == "requirements"
         next
       end
@@ -125,6 +137,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "action"
         next
       end
+      
       if key == "logDatetime"
         key = "log_datetime"
         $log.warn "log_datetime = #{value}"
