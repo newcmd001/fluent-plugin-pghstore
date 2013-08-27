@@ -130,7 +130,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
         $log.warn "log_datetime = #{value}"
         begin value_i = Integer(value)
           #Timestamp is in UNIX timestamp format
-          time2 = Date.jd(value_i)
+          time2 = Date.jd(value_i / 1000)
           value = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
           $log.warn "Integer timestamp - #{value}"
         rescue
