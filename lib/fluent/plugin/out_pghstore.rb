@@ -110,6 +110,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "logAction" and value.is_a? Integer
         key = "log_action"
       end
+      if key == "logaction" and value.is_a? Integer
+        key = "log_action"
+      end
       if key == "logDatetime"
         key = "log_datetime"
         $log.warn "log_datetime = #{value}"
