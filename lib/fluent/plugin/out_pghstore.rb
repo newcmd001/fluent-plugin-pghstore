@@ -121,7 +121,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "successful"
         if value == "true"
           value = 1
-        else if value == "false"
+        elsif value == "false"
           value = 0
         else
           value = 1 unless value.is_a? Integer
