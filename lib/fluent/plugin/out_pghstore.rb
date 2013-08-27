@@ -107,11 +107,17 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "sessionId"
         key = "session_id"
       end
-      if key == "logAction" and value.is_a? Integer
+      if key == "logAction"
         key = "log_action"
       end
-      if key == "logaction" and value.is_a? Integer
+      if key == "logaction"
         key = "log_action"
+      end
+      if key == "log_action"
+        next unless value.is_a? Integer
+      end
+      if key == "requirements"
+        next
       end
       if key == "logDatetime"
         key = "log_datetime"
