@@ -52,8 +52,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       table_name << "."
       table_name << tag_array[1]
       time1 = Time.new
-      time_str = time1.strftime(@time_slice_format)
-      table_name << time_str
+      time1_str = time1.strftime(@time_slice_format)
+      table_name << time1_str
       table_name << "."
       table_name << tag_array[2]
       table_name = table_name.gsub(@remove_tag_prefix, '') if @remove_tag_prefix
@@ -205,8 +205,8 @@ SQL
 
   def generate_sql_attribute(table_name, time, id, key, value)
   
-    time1 = Time.at(time)
-    time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
+    time2 = Time.at(time)
+    time_str = time2.strftime("%Y-%m-%d %H:%M:%S.%6N")
     
     sql =<<"SQL"
 INSERT INTO \"#{table_name}\" (player_action_id, key, value, created_datetime, updated_datetime) VALUES
