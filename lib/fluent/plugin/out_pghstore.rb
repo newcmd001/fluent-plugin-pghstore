@@ -100,7 +100,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
   end
   
   def uuid(game_id, timestamp)
-    a = game_id
+    a = String.new(game_id)
     a << "-"
     a << timestamp.strftime("%Y-%m-%d")
     a << "-"
