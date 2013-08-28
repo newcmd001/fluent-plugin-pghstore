@@ -104,7 +104,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "virtualCurrency"
         key = "virtual_currency"
       end
-      if key == "sessionId"
+      if key == "session_id"
+        next
+      elsif key == "sessionId"
         key = "session_id"
       end
       
@@ -135,6 +137,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
         next
       end
       if key == "action"
+        next
+      end
+      if key == "_eventtype"
         next
       end
       
