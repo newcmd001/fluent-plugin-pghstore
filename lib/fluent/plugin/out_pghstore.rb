@@ -64,7 +64,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       
       unless table_exists?(table_name) then
         create_table(table_name)
-        create_table_attribute(table_name)
+      end
+      unless table_exists?(table_name_attribute) then
+        create_table_attribute(table_name_attribute)
       end
       
       record['id'] = uuid(tag_array[1], time1)
