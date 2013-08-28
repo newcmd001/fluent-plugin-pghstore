@@ -171,6 +171,10 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     time1 = Time.new
     time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
     v_list.push("'#{time_str}'")
+    k_list.push("game_id")
+    table_name_array = table_name.split(".", 4)
+    game_id = table_name_array[0]
+    v_list.push("#{game_id}")
 
     sql =<<"SQL"
 INSERT INTO \"#{table_name}\" (#{k_list.join(",")}) VALUES
