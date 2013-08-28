@@ -59,9 +59,16 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       table_name = table_name.gsub(@remove_tag_prefix, '') if @remove_tag_prefix
       $log.warn "Table name: #{table_name}"
       
-      create_table(table_name) unless table_exists?(table_name)
+      table_name_attribute = table_name
+      table_name_attribute << "Attribute"
+      
+      unless table_exists?(table_name) then
+        create_table(table_name)
+        create_table_attribute(table_name)
+      end
       
       record['id'] = uuid(tag_array[1], time1)
+      record['game_id'] = tag_array[1]
       
       conn = get_connection()
       return if conn == nil  # TODO: chunk will be dropped. should retry?
@@ -71,6 +78,17 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
         conn.exec(sql)
       rescue PGError => e 
         $log.error "PGError: " + e.message  # dropped if error
+      end
+      
+      if record.has_key?('attributes')
+        record['attributes'].each {|(key,value)|
+          sql = generate_sql_attribute(table_name_attribute, time_str, record['id'], key, value)
+          begin
+            conn.exec(sql)
+          rescue PGError => e 
+            $log.error "PGError: " + e.message  # dropped if error
+          end
+        end
       end
     }
 
@@ -142,6 +160,9 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       if key == "_eventtype"
         next
       end
+      if key == "attributes"
+        next
+      end
       
       if key == "logDatetime"
         key = "log_datetime"
@@ -168,17 +189,26 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     }
     
     k_list.push("timestamp")
-    time1 = Time.new
+    time1 = Time.at(time)
     time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
     v_list.push("'#{time_str}'")
-    k_list.push("game_id")
-    table_name_array = table_name.split(".", 4)
-    game_id = table_name_array[0]
-    v_list.push("#{game_id}")
 
     sql =<<"SQL"
 INSERT INTO \"#{table_name}\" (#{k_list.join(",")}) VALUES
 (#{v_list.join(",")});
+SQL
+
+    return sql
+  end
+
+  def generate_sql_attribute(table_name, time, id, key, value)
+  
+    time1 = Time.at(time)
+    time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
+    
+    sql =<<"SQL"
+INSERT INTO \"#{table_name}\" (player_action_id, key, value, created_datetime, updated_datetime) VALUES
+(#{id}, #{key}, #{value}, #{time_str}, #{time_str});
 SQL
 
     return sql
@@ -242,6 +272,32 @@ CREATE TABLE "#{tablename}" (ID VARCHAR(64) NOT NULL ,
  	 TIME BIGINT,
  	 H BIGINT,
 	 PRIMARY KEY (ID));
+SQL
+
+    sql += @table_option if @table_option
+
+    conn = get_connection()
+    raise "Could not connect the database at create_table. abort." if conn == nil
+
+    begin
+      conn.exec(sql) 
+    rescue PGError => e
+      $log.error "Error at create_table:" + e.message
+      $log.error "SQL:" + sql
+    end
+    conn.close
+
+    $log.warn "table #{tablename} was not exist. created it."
+  end
+
+  def create_table_attribute(tablename)
+    sql =<<"SQL"
+CREATE TABLE "#{tablename}" (PLAYER_ACTION_ID VARCHAR(64) NOT NULL ,
+	 KEY VARCHAR(128),
+	 VALUE VARCHAR(128),
+	 CREATED_DATETIME TIMESTAMP,
+	 UPDATED_DATETIME TIMESTAMP,
+	 PRIMARY KEY (PLAYER_ACTION_ID, KEY, VALUE));
 SQL
 
     sql += @table_option if @table_option
