@@ -191,7 +191,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
     }
     
     k_list.push("timestamp")
-    time1 = Time.at(time)
+    time1 = Time.at(Integer(time))
     time_str = time1.strftime("%Y-%m-%d %H:%M:%S.%6N")
     v_list.push("'#{time_str}'")
 
