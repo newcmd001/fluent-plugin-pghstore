@@ -61,6 +61,8 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       
       table_name_attribute = table_name
       table_name_attribute << "Attribute"
+      $log.warn "Table name: #{table_name}"
+      $log.warn "Attribute table name: #{table_name_attribute}"
       
       unless table_exists?(table_name) then
         create_table(table_name)
