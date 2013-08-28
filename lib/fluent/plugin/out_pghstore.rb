@@ -212,7 +212,7 @@ SQL
     
     sql =<<"SQL"
 INSERT INTO \"#{table_name}\" (player_action_id, key, value, created_datetime, updated_datetime) VALUES
-(#{id}, #{key}, #{value}, #{time_str}, #{time_str});
+('#{id}', '#{key}', '#{value}', '#{time_str}', '#{time_str}');
 SQL
 
     return sql
