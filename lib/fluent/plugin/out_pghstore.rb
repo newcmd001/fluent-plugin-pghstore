@@ -59,7 +59,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
       table_name = table_name.gsub(@remove_tag_prefix, '') if @remove_tag_prefix
       $log.warn "Table name: #{table_name}"
       
-      table_name_attribute = table_name
+      table_name_attribute = String.new(table_name)
       table_name_attribute << "Attribute"
       $log.warn "Table name: #{table_name}"
       $log.warn "Attribute table name: #{table_name_attribute}"
