@@ -247,7 +247,6 @@ SQL
     conn = get_connection()
     raise "Could not connect the database at startup. abort." if conn == nil
     res = conn.exec(sql)
-    conn.close
     if res[0]["count"] == "1"
       return true
     else
@@ -289,7 +288,6 @@ SQL
       $log.error "Error at create_table:" + e.message
       $log.error "SQL:" + sql
     end
-    conn.close
 
     $log.warn "table #{tablename} was not exist. created it."
   end
@@ -315,7 +313,6 @@ SQL
       $log.error "Error at create_table:" + e.message
       $log.error "SQL:" + sql
     end
-    conn.close
 
     $log.warn "table #{tablename} was not exist. created it."
   end
