@@ -90,7 +90,7 @@ class Fluent::PgHStoreOutput < Fluent::BufferedOutput
           rescue PGError => e 
             $log.error "PGError: " + e.message  # dropped if error
           end
-        end
+        }
       end
     }
 
